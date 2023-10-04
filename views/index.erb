@@ -1,0 +1,9 @@
+
+<p>
+  <a href="new">新規作成</a>
+  <ul>
+    <% @url_titles.each do |x,link| %>
+    <li><a name='test' href="<%= x %>"><%= link %></a></li>
+    <% end %>
+  <ul>
+</p>
