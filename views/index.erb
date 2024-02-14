@@ -3,7 +3,7 @@
   <a href="memos/new">新規作成</a>
   <ul>
     <% @url_titles.each do |link,title| %>
-    <li><a href="memos/<%= link %>">
+    <li><a href="memos/<%= File.basename("#{link}") %>">
     <%=
     if title.strip.empty?
       "タイトルがありません"
