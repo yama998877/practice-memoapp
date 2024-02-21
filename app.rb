@@ -20,61 +20,49 @@ def save_memo(filename, word)
   end
 end
 
-def read_memo
-  # ファイルがあるか確認して一覧表示する
-  return [] unless Dir.exist?('./data')
+def read_memos(memo_files)
+  ascending_order_files = Dir.glob('./data/*.json').sort_by { |f| File.mtime(f) }
 
-  Dir.open('./data').each_child do |f|
-    File.read("./data/#{f}").split
+  ascending_order_files.each do |file|
+    memo_files << File.read(file)
   end
 end
 
 get '/memos' do
   json_files = []
-  @memo_path = Dir.glob('./data/*.json').sort_by { |f| File.mtime(f) }
-  @memo_path.each do |file|
-    json_files << File.read(file)
-  end
+  read_memos(json_files)
 
-  hashs = []
-  json_files.each do |json|
-    hashs << JSON.parse(json)
-  end
-
-  @titles = []
-  hashs.each do |t|
-    @titles << t['title']
-  end
-  @url_titles = @memo_path.zip(@titles) # URLとメモのタイトルを同じ配列に入れる
+  memo_hashs = json_files.map { |json_file| JSON.parse(json_file) }
+  memo_titles = memo_hashs.map { |memo| memo['title'] }
+  @url_titles = read_memos(json_files).zip(memo_titles) # URLとメモのタイトルを同じ配列に入れる
   erb :index
 end
 
 post '/memos' do
-  memo_hash = {}
-  @title = params['title']
-  memo_hash['title'] = params['title']
-  memo_hash['detail'] = params['detail']
-  save_memo("./data/#{SecureRandom.uuid}.json", memo_hash.to_json)
-  @names = read_memo
-  @memo_path = Dir.children('./data/').sort_by { |f| File.mtime("./data/#{f}") }
+  new_memo = {
+    'title' => params['title'],
+    'detail' => params['detail']
+  }
+  save_memo("./data/#{SecureRandom.uuid}.json", new_memo.to_json)
   redirect '/memos'
 end
 
-patch '/memos' do
-  new_memo_hash = {}
-  new_memo_hash['title'] = params['title']
-  new_memo_hash['detail'] = params['detail']
-  update_file = params['json']
-  changing_content = new_memo_hash.to_json
-  save_memo("./data/#{update_file}", changing_content)
+patch '/memos' do #'/memos/:file'に変更
+  edited_memo = {
+    'title' => params['title'],
+    'detail' => params['detail']
+  }
+  edited_file_name = "./data/#{params['memo_id']}"
+  changing_content = edited_memo.to_json
+  save_memo(edited_file_name, changing_content)
 
   redirect '/memos'
 end
 
-delete '/memos' do
-  delete_file = params['json']
-  delete_path = Pathname.new("./data/#{delete_file}")
-  File.delete(delete_path) if delete_path.dirname.to_s == './data'
+delete '/memos' do #'/memos/:file'に変更
+  uuid = params['memo_json_file'].delete('.json')
+  uuids = Dir.glob('./data/*.json').map { |filename| File.basename(filename, '.json') }
+  File.delete("./data/#{uuid}.json") if uuids.include?(uuid)
   redirect '/memos'
 end
 
@@ -82,17 +70,17 @@ get '/memos/new' do
   erb :new
 end
 
-get '/memos/data/:file' do
+get '/memos/:file' do
   @json_file = params[:file]
-
-  @memo_detail = JSON.parse(File.read("./data/#{@json_file}"))
+  exisiting_json_files = Dir.glob('./data/*.json').map { |filename| File.basename(filename) }
+  @memo_detail = JSON.parse(File.read("./data/#{@json_file}")) if exisiting_json_files.include?(@json_file)
   erb :detail
 end
 
-get '/memos/new/data/:file' do
+get '/memos/:file/edit' do
   @file_name = params[:file]
   @memo = JSON.parse(File.read("./data/#{@file_name}"))
-  erb :new_detail
+  erb :edit
 end
 
 not_found do
