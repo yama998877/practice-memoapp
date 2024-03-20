@@ -32,8 +32,8 @@ get '/memos' do
   json_files = []
   read_memos(json_files)
 
-  memo_hashs = json_files.map { |json_file| JSON.parse(json_file) }
-  memo_titles = memo_hashs.map { |memo| memo['title'] }
+  memos_title_detail = json_files.map { |json_file| JSON.parse(json_file) }
+  memo_titles = memos_title_detail.map { |memo| memo['title'] }
   @url_titles = read_memos(json_files).zip(memo_titles) # URLとメモのタイトルを同じ配列に入れる
   erb :index
 end
@@ -47,7 +47,18 @@ post '/memos' do
   redirect '/memos'
 end
 
-patch '/memos' do #'/memos/:file'に変更
+get '/memos/new' do
+  erb :new
+end
+
+get '/memos/:file' do
+  @json_file = params[:file]
+  exisiting_json_files = Dir.glob('./data/*.json').map { |filename| File.basename(filename) }
+  @memo_detail = JSON.parse(File.read("./data/#{@json_file}")) if exisiting_json_files.include?(@json_file)
+  erb :detail
+end
+
+patch '/memos/:file' do
   edited_memo = {
     'title' => params['title'],
     'detail' => params['detail']
@@ -59,22 +70,11 @@ patch '/memos' do #'/memos/:file'に変更
   redirect '/memos'
 end
 
-delete '/memos' do #'/memos/:file'に変更
+delete '/memos/:file' do
   uuid = params['memo_json_file'].delete('.json')
   uuids = Dir.glob('./data/*.json').map { |filename| File.basename(filename, '.json') }
   File.delete("./data/#{uuid}.json") if uuids.include?(uuid)
   redirect '/memos'
-end
-
-get '/memos/new' do
-  erb :new
-end
-
-get '/memos/:file' do
-  @json_file = params[:file]
-  exisiting_json_files = Dir.glob('./data/*.json').map { |filename| File.basename(filename) }
-  @memo_detail = JSON.parse(File.read("./data/#{@json_file}")) if exisiting_json_files.include?(@json_file)
-  erb :detail
 end
 
 get '/memos/:file/edit' do
