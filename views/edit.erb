@@ -1,4 +1,4 @@
-<form action="/memos" method="POST">
+<form action="/memos/<%= @file_name %>" method="POST">
 
   <input type="hidden" name="_method" value="PATCH">
   <input type='hidden' name='memo_id' value='<%= @file_name %>'>
