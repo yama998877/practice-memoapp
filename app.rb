@@ -15,10 +15,14 @@ helpers do
 end
 
 def save_memo(filename, word)
+  return if filename.include?('..')
+
   File.open(filename, 'w') do |file|
     file.puts(word)
   end
 end
+#load_memos,load_memoの追加
+#pathから.jsonを削除
 
 def read_memos(memo_files)
   ascending_order_files = Dir.glob('./data/*.json').sort_by { |f| File.mtime(f) }
@@ -53,7 +57,7 @@ end
 
 get '/memos/:file' do
   @json_file = params[:file]
-  exisiting_json_files = Dir.glob('./data/*.json').map { |filename| File.basename(filename) }
+  exisiting_json_files = Dir.glob('./data/*.json').map { |filename| File.basename(filename) }#ここで一旦データを配列に取り出している
   @memo_detail = JSON.parse(File.read("./data/#{@json_file}")) if exisiting_json_files.include?(@json_file)
   erb :detail
 end
@@ -63,7 +67,7 @@ patch '/memos/:file' do
     'title' => params['title'],
     'detail' => params['detail']
   }
-  edited_file_name = "./data/#{params['memo_id']}"
+  edited_file_name = "./data/#{params['memo_id']}"#urlから撮ってくるようにする
   changing_content = edited_memo.to_json
   save_memo(edited_file_name, changing_content)
 
