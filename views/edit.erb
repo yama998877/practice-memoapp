@@ -1,7 +1,6 @@
 <form action="/memos/<%= @file_name %>" method="POST">
 
   <input type="hidden" name="_method" value="PATCH">
-  <input type='hidden' name='memo_id' value='<%= @file_name %>'>
 
   タイトル:<input type="text" name="title" value="<%= h(@memo['title']) %>">
 
