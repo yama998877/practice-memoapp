@@ -68,13 +68,13 @@ patch '/memos/:id' do
   }
   edited_file_name = "./data/#{uuid}.json"
   changing_content = edited_memo.to_json
-  write_memo(edited_file_name, changing_content) if !read_memo(uuid).nil?
+  write_memo(edited_file_name, changing_content) unless read_memo(uuid).nil?
   redirect '/memos'
 end
 
 delete '/memos/:id' do
   uuid = params[:id]
-  File.delete("./data/#{uuid}.json") if !read_memo(uuid).nil?
+  File.delete("./data/#{uuid}.json") unless read_memo(uuid).nil?
   redirect '/memos'
 end
 
