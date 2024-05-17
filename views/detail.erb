@@ -1,15 +1,12 @@
-<%= h(@memo_detail['title']) %>
+<%= h(@memo_detail[:title]) %>
 
 <br>
-<%= h(@memo_detail['detail']).gsub(/\r\n/, '<br>') %>
+<%= h(@memo_detail[:detail]).gsub(/\r\n/, '<br>') %>
 <br><br>
 <a href="/memos/<%= @json_file %>/edit">変更</a>
 <form action="/memos/<%= @json_file %>" method="POST">
 
   <input type="hidden" name="_method" value="delete">
-
-  <input type='hidden' name='memo_json_file' value='<%= @json_file %>'>
-
   <input type="submit" value="削除">
 
 </form>

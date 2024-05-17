@@ -4,13 +4,12 @@
   <ul>
     <% @url_titles.each do |title,link| %>
     <li><a href="memos/<%= File.basename("#{link}") %>">
-    <%=
-    if title.strip.empty?
-      "タイトルがありません"
-    else
-      h(title)
-    end
-    %></a></li>
+      <% if title.strip.empty? %>
+        <span style="color: #CCC;">「タイトルがありません」</span>
+      <% else %>
+        <%= h(title) %>
+      <% end %>
+    </a></li>
     <% end %>
   <ul>
 </p>
