@@ -2,12 +2,12 @@
 <p>
   <a href="memos/new">新規作成</a>
   <ul>
-    <% @url_titles.each do |title,link| %>
+    <% read_memos.each do |link,memo| %>
     <li><a href="memos/<%= File.basename("#{link}") %>">
-      <% if title.strip.empty? %>
+      <% if memo[:title].strip.empty? %>
         <span style="color: #CCC;">「タイトルがありません」</span>
       <% else %>
-        <%= h(title) %>
+        <%= h(memo[:title]) %>
       <% end %>
     </a></li>
     <% end %>

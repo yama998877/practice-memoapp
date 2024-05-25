@@ -17,27 +17,26 @@ end
 DATA_DIR = File.join(File.dirname(__FILE__), 'data')
 
 def read_memos
+  memos = {}
   Dir.glob("#{DATA_DIR}/*.json").sort_by { |f| File.mtime(f) }.map do |f|
     memo = JSON.parse(File.read(f), symbolize_names: true)
-    memo[:uuid] = f.gsub(%r{./data/|.json}, '')
-    memo
+    uuid = File.basename(f, '.json')
+    memos[uuid] = memo
   end
+  memos
 end
 
 def read_memo(memo_uuid)
-  read_memos.detect { |memo_data| memo_data.value?(memo_uuid) if memo_data[:uuid] == memo_uuid }
+  read_memos[memo_uuid]
 end
 
 def write_memo(filename, word)
-  return if filename.include?('..')
-
   File.open(filename, 'w') do |file|
     file.puts(word)
   end
 end
 
 get '/memos' do
-  @url_titles = read_memos.map { |memo_url| memo_url.values_at(:title, :uuid) }
   erb :index
 end
 
