@@ -30,9 +30,14 @@ def read_memo(memo_uuid)
   read_memos[memo_uuid]
 end
 
-def write_memo(filename, word)
+def write_memo(uuid, memo_title, memo_detail)
+  memo = {
+    title: memo_title,
+    detail: memo_detail
+  }
+  filename = "./data/#{uuid}.json"
   File.open(filename, 'w') do |file|
-    file.puts(word)
+    file.puts(memo.to_json)
   end
 end
 
@@ -41,11 +46,7 @@ get '/memos' do
 end
 
 post '/memos' do
-  new_memo = {
-    title: params[:title],
-    detail: params[:detail]
-  }
-  write_memo("./data/#{SecureRandom.uuid}.json", new_memo.to_json)
+  write_memo(SecureRandom.uuid, params[:title], params[:detail])
   redirect '/memos'
 end
 
@@ -61,13 +62,7 @@ end
 
 patch '/memos/:id' do
   uuid = params[:id]
-  edited_memo = {
-    title: params[:title],
-    detail: params[:detail]
-  }
-  edited_file_name = "./data/#{uuid}.json"
-  changing_content = edited_memo.to_json
-  write_memo(edited_file_name, changing_content) unless read_memo(uuid).nil?
+  write_memo(uuid, params[:title], params[:detail]) unless read_memo(uuid).nil?
   redirect '/memos'
 end
 
