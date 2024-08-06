@@ -2,11 +2,13 @@
 
 require 'sinatra'
 require 'sinatra/reloader'
-require 'json'
 require 'securerandom'
 require 'rack/utils'
 require 'pathname'
+require 'pg'
 set :enviroment, :production
+
+CONN = PG.connect(dbname: 'memoapp')
 
 helpers do
   def h(text)
@@ -14,26 +16,33 @@ helpers do
   end
 end
 
-DATA_DIR = File.join(File.dirname(__FILE__), 'data')
-
-def read_memos
-  memos = {}
-  Dir.glob("#{DATA_DIR}/*.json").sort_by { |f| File.mtime(f) }.map do |f|
-    memo = JSON.parse(File.read(f), symbolize_names: true)
-    uuid = File.basename(f, '.json')
-    memos[uuid] = memo
+def read_memos(memo_id = 'id,title,detail')
+  if memo_id == 'id,title,detail'
+    memos = {}
+    CONN.exec("SELECT #{memo_id} FROM memos") do |result|
+      result.each do |row|
+        memo = { title: row['title'], detail: row['detail'] }
+        uuid = row['id']
+        memos[uuid] = memo
+      end
+    end
+  else
+    memos = 0
+    CONN.exec_params('SELECT title,detail FROM memos WHERE id = $1', [memo_id]) do |result|
+      result.each do |row|
+        memo = { title: row['title'], detail: row['detail'] }
+        memos = memo
+      end
+    end
   end
   memos
 end
 
 def write_memo(uuid, memo_title, memo_detail)
-  memo = {
-    title: memo_title,
-    detail: memo_detail
-  }
-  filename = "./data/#{uuid}.json"
-  File.open(filename, 'w') do |file|
-    file.puts(memo.to_json)
+  if read_memos.key?(uuid) == false
+    CONN.exec_params('INSERT INTO memos VALUES ($1,$2,$3,now())', [uuid, memo_title, memo_detail])
+  else
+    CONN.exec('UPDATE memos SET (title, detail, update_at) = ($1,$2, now()) WHERE id = $3', [memo_title, memo_detail, uuid])
   end
 end
 
@@ -51,26 +60,26 @@ get '/memos/new' do
 end
 
 get '/memos/:id' do
-  @json_file = params[:id]
-  @memo_detail = read_memos[@json_file]
+  @uuid = params[:id]
+  @memo_detail = read_memos(@uuid)
   erb :detail
 end
 
 patch '/memos/:id' do
   uuid = params[:id]
-  write_memo(uuid, params[:title], params[:detail]) unless read_memos[uuid].nil?
+  write_memo(uuid, params[:title], params[:detail])
   redirect '/memos'
 end
 
 delete '/memos/:id' do
   uuid = params[:id]
-  File.delete("./data/#{uuid}.json") unless read_memos[uuid].nil?
+  CONN.exec('DELETE FROM memos WHERE id = $1', [uuid])
   redirect '/memos'
 end
 
 get '/memos/:id/edit' do
-  @file_name = params[:id]
-  @memo = read_memos[@file_name]
+  @uuid = params[:id]
+  @memo = read_memos(@uuid)
   erb :edit
 end
 
