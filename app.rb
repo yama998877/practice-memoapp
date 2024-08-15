@@ -16,10 +16,10 @@ helpers do
   end
 end
 
-def read_memos(memo_id = 'id,title,detail')
-  if memo_id == 'id,title,detail'
+def read_memos(memo_id = 'none')
+  if memo_id == 'none'
     memos = {}
-    CONN.exec("SELECT #{memo_id} FROM memos") do |result|
+    CONN.exec('SELECT id,title,detail FROM memos') do |result|
       result.each do |row|
         memo = { title: row['title'], detail: row['detail'] }
         uuid = row['id']
