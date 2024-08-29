@@ -2,7 +2,7 @@
 <p>
   <a href="memos/new">新規作成</a>
   <ul>
-    <% read_memos.each do |link,memo| %>
+    <% @all_memo.each do |link,memo| %>
     <li><a href="memos/<%= File.basename("#{link}") %>">
       <% if memo[:title].strip.empty? %>
         <span style="color: #CCC;">「タイトルがありません」</span>
