@@ -29,7 +29,7 @@ def read_memos(conn)
 end
 
 def read_memo(conn, memo_id)
-  memo = 0
+  memo = nil
   conn.exec_params('SELECT title,detail FROM memos WHERE id = $1 LIMIT 1', [memo_id]) do |result|
     result.each do |row|
       memo = { title: row['title'], detail: row['detail'] }
@@ -38,21 +38,21 @@ def read_memo(conn, memo_id)
   memo
 end
 
-def write_memo(conn, uuid, memo_title, memo_detail)
-  if read_memos(conn).key?(uuid) == false
-    conn.exec_params('INSERT INTO memos VALUES ($1,$2,$3,now())', [uuid, memo_title, memo_detail])
-  else
-    conn.exec('UPDATE memos SET (title, detail, update_at) = ($1,$2, now()) WHERE id = $3', [memo_title, memo_detail, uuid])
-  end
+def create_memo(conn, uuid, memo_title, memo_detail)
+  conn.exec_params('INSERT INTO memos VALUES ($1,$2,$3,now())', [uuid, memo_title, memo_detail]) if read_memos(conn).key?(uuid) != true
+end
+
+def update_memo(conn, uuid, memo_title, memo_detail)
+  conn.exec('UPDATE memos SET (title, detail, update_at) = ($1,$2, now()) WHERE id = $3', [memo_title, memo_detail, uuid])
 end
 
 get '/memos' do
-  @all_memo = read_memos(conn)
+  @memos = read_memos(conn)
   erb :index
 end
 
 post '/memos' do
-  write_memo(conn, SecureRandom.uuid, params[:title], params[:detail])
+  create_memo(conn, SecureRandom.uuid, params[:title], params[:detail])
   redirect '/memos'
 end
 
@@ -68,7 +68,7 @@ end
 
 patch '/memos/:id' do
   uuid = params[:id]
-  write_memo(conn, uuid, params[:title], params[:detail])
+  update_memo(conn, uuid, params[:title], params[:detail])
   redirect '/memos'
 end
 
