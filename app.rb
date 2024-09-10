@@ -4,7 +4,6 @@ require 'sinatra'
 require 'sinatra/reloader'
 require 'securerandom'
 require 'rack/utils'
-require 'pathname'
 require 'pg'
 set :enviroment, :production
 
@@ -20,9 +19,7 @@ def read_memos(conn)
   memos = {}
   conn.exec('SELECT id,title,detail FROM memos') do |result|
     result.each do |row|
-      memo = { title: row['title'], detail: row['detail'] }
-      uuid = row['id']
-      memos[uuid] = memo
+      memos[row['id']] = { title: row['title'], detail: row['detail'] }
     end
   end
   memos
@@ -39,7 +36,7 @@ def read_memo(conn, memo_id)
 end
 
 def create_memo(conn, uuid, memo_title, memo_detail)
-  conn.exec_params('INSERT INTO memos VALUES ($1,$2,$3,now())', [uuid, memo_title, memo_detail]) if read_memos(conn).key?(uuid) != true
+  conn.exec_params('INSERT INTO memos VALUES ($1,$2,$3,now())', [uuid, memo_title, memo_detail]) unless read_memos(conn).key?(uuid)
 end
 
 def update_memo(conn, uuid, memo_title, memo_detail)
