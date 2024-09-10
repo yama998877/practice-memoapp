@@ -3,8 +3,8 @@
 <br>
 <%= h(@memo_detail[:detail]).gsub(/\r\n/, '<br>') %>
 <br><br>
-<a href="/memos/<%= @json_file %>/edit">変更</a>
-<form action="/memos/<%= @json_file %>" method="POST">
+<a href="/memos/<%= @uuid %>/edit">変更</a>
+<form action="/memos/<%= @uuid %>" method="POST">
 
   <input type="hidden" name="_method" value="delete">
   <input type="submit" value="削除">
